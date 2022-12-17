@@ -1322,11 +1322,28 @@ RSpec.describe "bundle gem" do
 
     include_examples "generating a gem"
 
-    context "--ext parameter set" do
-      let(:flags) { "--ext" }
+    context "--ext parameter with no value" do
+      it "prints deprecation when used after gem name" do
+        bundle ["gem", "--ext", gem_name].compact.join(" ")
+        expect(err).to include "[DEPRECATED] Option `--ext` without explicit value is deprecated."
+        expect(bundled_app("#{gem_name}/ext/#{gem_name}/#{gem_name}.c")).to exist
+      end
+
+      it "prints deprecation when used before gem name" do
+        bundle ["gem", gem_name, "--ext"].compact.join(" ")
+        expect(bundled_app("#{gem_name}/ext/#{gem_name}/#{gem_name}.c")).to exist
+      end
+    end
+
+    context "--ext parameter set with C" do
+      let(:flags) { "--ext=c" }
 
       before do
         bundle ["gem", gem_name, flags].compact.join(" ")
+      end
+
+      it "is not deprecated" do
+        expect(err).not_to include "[DEPRECATED] Option `--ext` without explicit value is deprecated."
       end
 
       it "builds ext skeleton" do
